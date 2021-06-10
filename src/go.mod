@@ -1,4 +1,4 @@
-module github.com/msesto/cloudnative-go
+module github.com/msesto/cloudnative-go/src
 
 go 1.16
 
