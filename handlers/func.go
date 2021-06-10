@@ -5,12 +5,12 @@ import (
 	"sync"
 )
 
+var ErrorNoSuchKey = errors.New("no such key")
+
 var store = struct {
 	sync.RWMutex
 	m map[string]string
 }{m: make(map[string]string)}
-
-var ErrorNoSuchKey = errors.New("no such key")
 
 func Get(key string) (string, error) {
 	store.RLock()
