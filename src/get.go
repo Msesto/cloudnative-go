@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	h "github.com/Msesto/cloudnative-go/src/handlers"
 	"github.com/gorilla/mux"
-	h "github.com/msesto/cloudnative-go/src/handlers"
 )
 
 func KeyValueGetHandler(w http.ResponseWriter, r *http.Request) {
