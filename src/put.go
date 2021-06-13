@@ -29,6 +29,6 @@ func KeyValuePutHandler(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError)
 		return
 	}
-	logger.WritePut(key, string(value))
+	// logger.WritePut(key, string(value))
 	w.WriteHeader(http.StatusCreated) // All good! Return StatusCreated
 }

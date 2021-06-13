@@ -1,57 +1,38 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"net/http"
+	"net"
 
 	h "github.com/Msesto/cloudnative-go/src/handlers"
-	"github.com/gorilla/mux"
+	pb "github.com/Msesto/cloudnative-go/src/keyvalue"
+	"google.golang.org/grpc"
 )
 
-func helloMuxHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello gorilla/mux!\n"))
+type server struct {
+	pb.UnimplementedKeyValueServer
 }
 
-var logger h.TransactionLogger
+func (s *server) Get(ctx context.Context, r *pb.GetRequest) (*pb.GetResponse, error) {
 
-func initializeTransactionLog() error {
-	var err error
+	log.Printf("Received GET key=%v", r.Key)
 
-	logger, err = h.NewFileTransactionLogger("transaction.log")
-	if err != nil {
-		return fmt.Errorf("failed to create event logger: %w", err)
-	}
+	value, err := h.Get(r.Key)
 
-	events, errors := logger.ReadEvents()
-	e, ok := h.Event{}, true
-
-	for ok && err == nil {
-		select {
-		case err, ok = <-errors: // Retrieve any errors
-		case e, ok = <-events:
-			switch e.EventType {
-			case h.EventDelete: // Got a DELETE event!
-				err = h.Delete(e.Key)
-			case h.EventPut: // Got a PUT event!
-				err = h.Put(e.Key, e.Value)
-			}
-		}
-	}
-	logger.Run()
-
-	return err
+	return &pb.GetResponse{Value: value}, err
 }
 
 func main() {
-	initializeTransactionLog()
-	r := mux.NewRouter()
+	s := grpc.NewServer()
+	pb.RegisterKeyValueServer(s, &server{})
 
-	r.HandleFunc("/", helloMuxHandler)
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
 
-	r.HandleFunc("/v1/{key}", KeyValuePutHandler).Methods("PUT")
-	r.HandleFunc("/v1/{key}", KeyValueGetHandler).Methods("GET")
-	r.HandleFunc("/v1/{key}", KeyValueDeleteHandler).Methods("DELETE")
-
-	log.Fatal(http.ListenAndServe(":8080", r))
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }

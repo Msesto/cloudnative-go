@@ -17,6 +17,6 @@ func KeyValueDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	logger.WriteDelete(key)
+	// logger.WriteDelete(key)
 	w.WriteHeader(http.StatusOK)
 }
